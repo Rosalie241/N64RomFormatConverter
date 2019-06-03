@@ -13,6 +13,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System;
+using System.Security.Cryptography;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,6 +83,16 @@ namespace N64RomFormatConverter
             getRomInfo();
         }
 
+        public string GetMd5Hash()
+        {
+            using(MD5 hash = MD5.Create())
+            {
+                using(FileStream fileStream = File.OpenRead(input))
+                {
+                    return BitConverter.ToString(hash.ComputeHash(fileStream)).Replace("-", "").ToLower();
+                }
+            }
+        }
         public void Convert(string outputFile, RomFormat format)
         {
             byte[] fileBytes = File.ReadAllBytes(input);
@@ -90,40 +101,55 @@ namespace N64RomFormatConverter
             {
                 case RomFormat.N64:
 
-                    if (format == RomFormat.N64)
-                        break;
+                    switch (format)
+                    {
+                        case RomFormat.Z64:
+                            dWordSwap(fileBytes);
+                            break;
 
-                    if (format == RomFormat.Z64)
-                        dWordSwap(fileBytes);
+                        case RomFormat.V64:
+                            wordSwap(dWordSwap(fileBytes));
+                            break;
 
-                    if (format == RomFormat.V64)
-                        wordSwap(dWordSwap(fileBytes));
+                        default:
+                            break;
+                    }
 
                     break;
 
                 case RomFormat.V64:
 
-                    if (format == RomFormat.V64)
-                        break;
+                    switch(format)
+                    {
+                        case RomFormat.N64:
+                            dWordSwap(wordSwap(fileBytes));
+                            break;
 
-                    if(format == RomFormat.N64)
-                        dWordSwap(wordSwap(fileBytes));
+                        case RomFormat.Z64:
+                            wordSwap(fileBytes);
+                            break;
 
-                    if (format == RomFormat.Z64)
-                        wordSwap(fileBytes);
+                        default:
+                            break;
+                    }
 
                     break;
 
                 case RomFormat.Z64:
 
-                    if (format == RomFormat.Z64)
-                        break;
+                    switch (format)
+                    {
+                        case RomFormat.N64:
+                            dWordSwap(fileBytes);
+                            break;
 
-                    if(format == RomFormat.N64)
-                        dWordSwap(fileBytes);
+                        case RomFormat.V64:
+                            wordSwap(fileBytes);
+                            break;
 
-                    if (format == RomFormat.V64)
-                        wordSwap(fileBytes);
+                        default:
+                            break;
+                    }
 
                     break;
             }
@@ -133,10 +159,9 @@ namespace N64RomFormatConverter
 
         private byte[] wordSwap(byte[] buffer)
         {
-            for (int i = 0; i < buffer.Length; i += 2){
-
+            for (int i = 0; i < buffer.Length; i += 2)
                 wordSwap(buffer, i, i + 1);
-            }
+
             return buffer;
         }
 
@@ -151,10 +176,12 @@ namespace N64RomFormatConverter
 
         private byte[] dWordSwap(byte[] buffer)
         {
-            for (int i = 0; i < buffer.Length; i += 4){
+            for (int i = 0; i < buffer.Length; i += 4)
+            {
                 wordSwap(buffer, i, i + 3);
                 wordSwap(buffer, i + 1, i + 2);
             }
+
             return buffer;
         }
 

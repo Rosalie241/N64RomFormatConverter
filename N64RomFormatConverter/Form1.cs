@@ -28,28 +28,6 @@ namespace N64RomFormatConverter
 {
     public partial class Form1 : Form
     {
-        private void changeConvertButtonsText(RomConverter.RomFormat button1Format, RomConverter.RomFormat button2Format)
-        {
-            if(!ConvertButton1.Enabled || !ConvertButton2.Enabled)
-            {
-                ConvertButton1.Enabled = true;
-                ConvertButton2.Enabled = true;
-            }
-
-            ConvertButton1.Text = $"Convert to {button1Format.ToString()}";
-            ConvertButton2.Text = $"Convert to {button2Format.ToString()}";
-        }
-
-        private void resetConvertButtons()
-        {
-            // reset text
-            ConvertButton1.Text = "Convert to ...";
-            ConvertButton2.Text = "Convert to ...";
-
-            // disable them
-            ConvertButton1.Enabled = false;
-            ConvertButton2.Enabled = false;
-        }
         private string romFileName { get; set; }
 
         public Form1()
@@ -57,10 +35,8 @@ namespace N64RomFormatConverter
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
+        private void Form1_Load(object sender, EventArgs e) { }
 
-        }
 
         private void SelectFileButton_Click(object sender, EventArgs e)
         {
@@ -86,33 +62,35 @@ namespace N64RomFormatConverter
                         {
                             // invalid
                             case RomConverter.RomFormat.INVALID:
-#if DEBUG
-                                MessageBox.Show($"Invalid ROM header: {romConverter.RomHeader}!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#else
                                 MessageBox.Show("Invalid ROM!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif
-                                resetConvertButtons();
+                                // disable all buttons
+                                ConvertButton1.Enabled = false;
+                                ConvertButton2.Enabled = false;
+                                ConvertButton3.Enabled = false;
                                 return;
 
                             case RomConverter.RomFormat.N64:
-                                changeConvertButtonsText(RomConverter.RomFormat.V64, RomConverter.RomFormat.Z64);
+                                ConvertButton1.Enabled = false;
+                                ConvertButton2.Enabled = true;
+                                ConvertButton3.Enabled = true;
                                 break;
 
                             case RomConverter.RomFormat.V64:
-                                changeConvertButtonsText(RomConverter.RomFormat.N64, RomConverter.RomFormat.Z64);
+                                ConvertButton1.Enabled = true;
+                                ConvertButton2.Enabled = false;
+                                ConvertButton3.Enabled = true;
                                 break;
 
                             case RomConverter.RomFormat.Z64:
-                                changeConvertButtonsText(RomConverter.RomFormat.N64, RomConverter.RomFormat.V64);
+                                ConvertButton1.Enabled = true;
+                                ConvertButton2.Enabled = true;
+                                ConvertButton3.Enabled = false;
                                 break;
                         }
 
-
-                        RomInfoText.Text = $"FORMAT: {format.ToString()}" + Environment.NewLine +
-                                           $"HEADER: {romConverter.RomHeader}";
-
-
-
+                        RomInfoText.Text = $"FORMAT     | {format.ToString()}" + Environment.NewLine +
+                                           $"HEADER     | {romConverter.RomHeader}" + Environment.NewLine +
+                                           $"MD5 HASH | {romConverter.GetMd5Hash()}";
                     }
                 }
             }     
@@ -120,48 +98,37 @@ namespace N64RomFormatConverter
             
         }
 
-        private void ConvertButtonClick(Button button)
+        private void ConvertButton_Click(Button button, RomConverter.RomFormat format)
         {
             using (RomConverter romConverter = new RomConverter(romFileName))
             {
                 using (SaveFileDialog fileDialog = new SaveFileDialog())
                 {
-                    RomConverter.RomFormat format = RomConverter.RomFormat.INVALID;
-
-                    if (button.Text.Contains("N64"))
-                    {
-                        format = RomConverter.RomFormat.N64;
-                        fileDialog.Filter = "N64 rom(*.n64)|*.n64";
-                    }
-                    else if (button.Text.Contains("V64"))
-                    {
-                        format = RomConverter.RomFormat.V64;
-                        fileDialog.Filter = "N64 rom(*.v64)|*.v64";
-                    }
-                    else if (button.Text.Contains("Z64"))
-                    {
-                        format = RomConverter.RomFormat.Z64;
-                        fileDialog.Filter = "N64 rom(*.z64)|*.z64";
-                    }
-
+                   
+                    fileDialog.Filter = $"N64 rom(*.{format.ToString().ToLower()})|*.{format.ToString().ToLower()}";
                     fileDialog.FileName = Path.GetFileName(Regex.Replace(romFileName, romConverter.GetFormat().ToString(), format.ToString().ToLower(), RegexOptions.IgnoreCase));
 
-                    DialogResult result = fileDialog.ShowDialog();
-                    if (result == DialogResult.OK)
+                    if (fileDialog.ShowDialog() == DialogResult.OK)
                     {
-                        romConverter.Convert(fileDialog.FileName, format);
+                            romConverter.Convert(fileDialog.FileName, format);
+                            MessageBox.Show("Converted successfully!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
         }
         private void ConvertButton1_Click(object sender, EventArgs e)
         {
-            ConvertButtonClick(ConvertButton1);
+            ConvertButton_Click(ConvertButton1, RomConverter.RomFormat.N64);
         }
 
         private void ConvertButton2_Click(object sender, EventArgs e)
         {
-            ConvertButtonClick(ConvertButton2);
+            ConvertButton_Click(ConvertButton2, RomConverter.RomFormat.V64);
+        }
+
+        private void ConvertButton3_Click(object sender, EventArgs e)
+        {
+            ConvertButton_Click(ConvertButton3, RomConverter.RomFormat.Z64);
         }
     }
 }
