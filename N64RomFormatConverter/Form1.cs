@@ -51,7 +51,6 @@ namespace N64RomFormatConverter
                 if(result == DialogResult.OK)
                 {
                     romFileName = fileDialog.FileName;
-                    RomFileInputText.Text = romFileName;
 
                     using (RomConverter romConverter = new RomConverter(romFileName))
                     {
@@ -67,6 +66,9 @@ namespace N64RomFormatConverter
                                 ConvertButton1.Enabled = false;
                                 ConvertButton2.Enabled = false;
                                 ConvertButton3.Enabled = false;
+                                // reset textboxes
+                                RomFileInputText.Text = "";
+                                RomInfoText.Text = "";
                                 return;
 
                             case RomConverter.RomFormat.N64:
@@ -88,6 +90,7 @@ namespace N64RomFormatConverter
                                 break;
                         }
 
+                        RomFileInputText.Text = romFileName;
                         RomInfoText.Text = $"FORMAT     | {format.ToString()}" + Environment.NewLine +
                                            $"HEADER     | {romConverter.RomHeader}" + Environment.NewLine +
                                            $"MD5 HASH | {romConverter.GetMd5Hash()}";
