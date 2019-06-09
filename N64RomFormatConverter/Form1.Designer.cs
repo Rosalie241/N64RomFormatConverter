@@ -46,9 +46,9 @@
             // 
             // SelectFileButton
             // 
-            this.SelectFileButton.Location = new System.Drawing.Point(399, 10);
+            this.SelectFileButton.Location = new System.Drawing.Point(399, 12);
             this.SelectFileButton.Name = "SelectFileButton";
-            this.SelectFileButton.Size = new System.Drawing.Size(75, 23);
+            this.SelectFileButton.Size = new System.Drawing.Size(75, 22);
             this.SelectFileButton.TabIndex = 1;
             this.SelectFileButton.Text = "select file";
             this.SelectFileButton.UseVisualStyleBackColor = true;
